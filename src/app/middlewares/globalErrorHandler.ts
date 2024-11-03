@@ -1,17 +1,17 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import {  NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
 import handleZodError from "../errors/handleZodError";
 import AppError from "../errors/AppError";
 import { TErrorSources } from "../interface/errors";
 import { Prisma } from "@prisma/client";
 import { handlePrismaError } from "../errors/handlePrismaError";
-import { NextFunction, Request, Response } from "express";
 
 export const globalErrorHandler = (
   error: any,
   req: Request,
-  res: Response,
+  res: any,
   next: NextFunction
 ) => {
   //  setting default value
