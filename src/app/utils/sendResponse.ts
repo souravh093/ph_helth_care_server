@@ -1,9 +1,9 @@
 import { Response } from 'express';
 
 type TMeta = {
-  totalItems: number;
-  totalPages: number;
-  currentPage: number;
+  total?: number;
+  page: number;
+  limit: number;
 };
 
 type TResponse<T> = {
