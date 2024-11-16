@@ -3,7 +3,6 @@ import prisma from "../../../db/db.config";
 import bcrypt from "bcryptjs";
 
 const createAdminIntoDB = async (payload: any) => {
-  console.log(payload);
   const hashPassword: string = await bcrypt.hash(payload.password, 10);
 
   const userData = {
@@ -11,8 +10,6 @@ const createAdminIntoDB = async (payload: any) => {
     password: hashPassword,
     role: UserRole.ADMIN,
   };
-
-  console.log(userData)
 
   const result = await prisma.$transaction(async (prisma) => {
     await prisma.user.create({

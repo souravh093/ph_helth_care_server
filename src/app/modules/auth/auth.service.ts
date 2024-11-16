@@ -7,6 +7,7 @@ import { verifyToken } from "../../utils/verifyToken";
 import { UserStatus } from "@prisma/client";
 import config from "../../../config";
 import { Secret } from "jsonwebtoken";
+import { TChangePassword } from "../../types/changePassword.interface";
 
 const login = async (payload: TAuthLogin) => {
   const isExistUser = await prisma.user.findUniqueOrThrow({
@@ -83,7 +84,42 @@ const refreshToken = async (token: string) => {
   };
 };
 
+const changePassword = async (email: string, payload: TChangePassword) => {
+  const isExistUser = await prisma.user.findUnique({
+    where: {
+      email,
+    },
+  });
+
+  if (!isExistUser) {
+    throw new AppError(404, "User not found");
+  }
+
+  const isPasswordMatch = bcrypt.compareSync(
+    payload.oldPassword,
+    isExistUser.password
+  );
+
+  if (!isPasswordMatch) {
+    throw new AppError(401, "Password Not Match");
+  }
+
+  const hashPassword = bcrypt.hashSync(payload.newPassword, 10);
+
+  await prisma.user.update({
+    where: {
+      email,
+    },
+    data: {
+      password: hashPassword,
+    },
+  });
+
+  return "Password changed successfully";
+};
+
 export const AuthServices = {
   login,
   refreshToken,
+  changePassword,
 };

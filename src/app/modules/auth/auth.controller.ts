@@ -31,7 +31,19 @@ const refreshToken = catchAsync(async (req, res) => {
   });
 });
 
+const changedPassword = catchAsync(async (req, res) => {
+  const {email} = req.user;
+  const result = await AuthServices.changePassword(email, req.body);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: result
+  })
+})
+
 export const AuthController = {
   loginUser,
   refreshToken,
+  changedPassword,
 };
