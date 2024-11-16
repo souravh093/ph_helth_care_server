@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import { verifyToken } from "../../utils/verifyToken";
 import { UserStatus } from "@prisma/client";
 import config from "../../../config";
+import { Secret } from "jsonwebtoken";
 
 const login = async (payload: TAuthLogin) => {
   const isExistUser = await prisma.user.findUniqueOrThrow({
@@ -32,14 +33,14 @@ const login = async (payload: TAuthLogin) => {
 
   const accessToken = generateToken({
     payload: jwtPayload,
-    secret: config.jwtAccessSecret as string,
-    expiresIn: config.jwtAccessExpiresIn as string,
+    secret: config.jwtAccessSecret as Secret,
+    expiresIn: "5m",
   });
 
   const refreshToken = generateToken({
     payload: jwtPayload,
-    secret: config.jwtRefreshSecret as string,
-    expiresIn: config.jwtRefreshExpiresIn as string,
+    secret: config.jwtRefreshSecret as Secret,
+    expiresIn: "30m",
   });
 
   return {
@@ -52,7 +53,7 @@ const login = async (payload: TAuthLogin) => {
 const refreshToken = async (token: string) => {
   let decoded;
   try {
-    decoded = verifyToken(token, config.jwtRefreshSecret as string);
+    decoded = verifyToken(token, config.jwtRefreshSecret as Secret);
   } catch (error) {
     throw new AppError(401, "You are not authorized");
   }
@@ -72,8 +73,8 @@ const refreshToken = async (token: string) => {
 
   const accessToken = generateToken({
     payload: jwtPayload,
-    secret: config.jwtAccessSecret as string,
-    expiresIn: config.jwtAccessExpiresIn as string,
+    secret: config.jwtAccessSecret as Secret,
+    expiresIn: "5m",
   });
 
   return {

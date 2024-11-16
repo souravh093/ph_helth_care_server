@@ -1,4 +1,4 @@
-import jwt from "jsonwebtoken";
+import jwt, { Secret } from "jsonwebtoken";
 
 type TGenerateToken = {
   payload: {
@@ -6,8 +6,8 @@ type TGenerateToken = {
     role: string;
     id: string;
   };
-  secret: string;
-  expiresIn: string;
+  secret: Secret;
+  expiresIn: string | number;
 };
 
 export const generateToken = ({
