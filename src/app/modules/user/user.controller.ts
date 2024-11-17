@@ -1,3 +1,4 @@
+import { TCloudinaryResponse } from "../../types/file";
 import catchAsync from "../../utils/catchAsync";
 import { uploadCloudinary } from "../../utils/fileUploder";
 import sendResponse from "../../utils/sendResponse";
@@ -7,9 +8,9 @@ const createAdmin = catchAsync(async (req, res) => {
   let userData = JSON.parse(req.body.data);
 
   if (req.file) {
-    const uploadFile = (await uploadCloudinary(req.file)) as {
-      secure_url: string;
-    };
+    const uploadFile = (await uploadCloudinary(
+      req.file
+    )) as TCloudinaryResponse;
     userData.admin.profilePhoto = uploadFile.secure_url;
   }
 

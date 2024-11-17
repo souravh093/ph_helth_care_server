@@ -1,8 +1,10 @@
 import { UserRole } from "@prisma/client";
 import prisma from "../../../db/db.config";
 import bcrypt from "bcryptjs";
+import { TAdminUser } from "../../types/admin.inteface";
 
-const createAdminIntoDB = async (payload: any) => {
+
+const createAdminIntoDB = async (payload: TAdminUser) => {
   const hashPassword: string = await bcrypt.hash(payload.password, 10);
 
   const userData = {
