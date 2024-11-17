@@ -3,7 +3,7 @@ import jwt, { Secret } from "jsonwebtoken";
 type TGenerateToken = {
   payload: {
     email: string;
-    role: string;
+    role?: string;
     id: string;
   };
   secret: Secret;

@@ -6,8 +6,10 @@ import bcrypt from "bcryptjs";
 import { verifyToken } from "../../utils/verifyToken";
 import { UserStatus } from "@prisma/client";
 import config from "../../../config";
-import { Secret } from "jsonwebtoken";
+import { JwtPayload, Secret } from "jsonwebtoken";
 import { TChangePassword } from "../../types/changePassword.interface";
+import { sendEmail } from "../../utils/sendEmail";
+import jwt from "jsonwebtoken";
 
 const login = async (payload: TAuthLogin) => {
   const isExistUser = await prisma.user.findUniqueOrThrow({
@@ -118,8 +120,76 @@ const changePassword = async (email: string, payload: TChangePassword) => {
   return "Password changed successfully";
 };
 
+const forgetPassword = async (email: string) => {
+  const isExistUser = await prisma.user.findUnique({
+    where: {
+      email,
+    },
+  });
+
+  if (!isExistUser) {
+    throw new AppError(404, "Invalid Email");
+  }
+
+  const token = generateToken({
+    payload: { email: isExistUser.email, id: isExistUser.id },
+    secret: config.jwtAccessSecret as Secret,
+    expiresIn: "1h",
+  });
+
+  const resetLink = `${config.client_url}/reset-password?id=${isExistUser.id}&token=${token}`;
+
+  sendEmail(resetLink, email);
+
+  return "Check your email to reset your password";
+};
+
+const resetPassword = async (payload: {
+  id: string;
+  newPassword: string;
+  token: string;
+}) => {
+  const isExistUser = await prisma.user.findUnique({
+    where: {
+      id: payload.id,
+    },
+  });
+
+  if (!isExistUser) {
+    throw new AppError(404, "Invalid Email");
+  }
+
+  if (!payload.token) {
+    throw new AppError(400, "Token is required");
+  }
+
+  const decoded = jwt.verify(
+    payload.token,
+    config.jwtAccessSecret as Secret
+  ) as JwtPayload;
+
+  if (decoded.id !== isExistUser.id) {
+    throw new AppError(401, "Invalid token");
+  }
+
+  const hashedPassword = bcrypt.hashSync(payload.newPassword, 10);
+
+  await prisma.user.update({
+    where: {
+      id: payload.id,
+    },
+    data: {
+      password: hashedPassword,
+    },
+  });
+
+  return "Password reset successfully";
+};
+
 export const AuthServices = {
   login,
   refreshToken,
   changePassword,
+  forgetPassword,
+  resetPassword,
 };
