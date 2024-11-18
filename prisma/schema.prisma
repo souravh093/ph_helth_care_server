@@ -17,6 +17,8 @@ model User {
   createdAt          DateTime   @default(now())
   updatedAt          DateTime   @updatedAt
   admin              Admin?
+  doctor             Doctor?
+  patient            Patient?
 
   @@map("users")
 }
@@ -34,6 +36,11 @@ enum UserStatus {
   DELETED
 }
 
+enum Gender {
+  MALE
+  FEMALE
+}
+
 model Admin {
   id            String   @id @default(uuid())
   name          String
@@ -47,4 +54,39 @@ model Admin {
   user User @relation(fields: [email], references: [email])
 
   @@map("admins")
+}
+
+model Doctor {
+  id                  String   @id @default(uuid())
+  name                String
+  email               String   @unique
+  user                User     @relation(fields: [email], references: [email])
+  profilePhoto        String?  @db.Text
+  contactNumber       String
+  address             String?
+  registrationNumber  String
+  experience          Int      @default(0)
+  gender              Gender
+  appointmentFee      Int
+  qualification       String
+  currentWorkingPlace String
+  designation         String
+  isDeleted           Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@map("doctors")
+}
+
+model Patient {
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  user          User     @relation(fields: [email], references: [email])
+  profilePhoto  String?  @db.Text
+  contactNumber String
+  address       String?  @db.Text
+  isDeleted     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
