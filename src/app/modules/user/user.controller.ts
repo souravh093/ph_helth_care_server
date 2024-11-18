@@ -44,7 +44,29 @@ const createDoctor = catchAsync(async (req, res) => {
   });
 });
 
+
+const createPatient = catchAsync(async (req, res) => {
+  let userData = JSON.parse(req.body.data);
+
+  if (req.file) {
+    const uploadFile = (await uploadCloudinary(
+      req.file
+    )) as TCloudinaryResponse;
+    userData.patient.profilePhoto = uploadFile.secure_url;
+  }
+
+  const result = await UsersServices.createPatientIntoDB(userData);
+
+  sendResponse(res, {
+    statusCode: 201,
+    success: true,
+    message: "Patient signup successfully",
+    data: result,
+  });
+});
+
 export const UserController = {
   createAdmin,
   createDoctor,
+  createPatient,
 };

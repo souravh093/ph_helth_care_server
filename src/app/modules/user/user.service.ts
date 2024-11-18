@@ -1,7 +1,7 @@
 import { UserRole } from "@prisma/client";
 import prisma from "../../../db/db.config";
 import bcrypt from "bcryptjs";
-import { TAdminUser, TDoctorUser } from "../../types/admin.inteface";
+import { TAdminUser, TDoctorUser, TPatientUser } from "../../types/admin.inteface";
 
 
 const createAdminIntoDB = async (payload: TAdminUser) => {
@@ -37,7 +37,7 @@ const createDoctorIntoDB = async (payload: TDoctorUser) => {
   const userData = {
     email: payload.doctor.email,
     password: hashPassword,
-    role: UserRole.ADMIN,
+    role: UserRole.DOCTOR,
   };
 
   const result = await prisma.$transaction(async (prisma) => {
@@ -58,7 +58,35 @@ const createDoctorIntoDB = async (payload: TDoctorUser) => {
   return result;
 };
 
+const createPatientIntoDB = async (payload: TPatientUser) => {
+  const hashPassword: string = await bcrypt.hash(payload.password, 10);
+
+  const userData = {
+    email: payload.patient.email,
+    password: hashPassword,
+    role: UserRole.PATIENT,
+  };
+
+  const result = await prisma.$transaction(async (prisma) => {
+    await prisma.user.create({
+      data: userData,
+      include: {
+        doctor: true,
+      },
+    });
+
+    const createPatient = await prisma.patient.create({
+      data: payload.patient,
+    });
+
+    return createPatient;
+  });
+
+  return result;
+};
+
 export const UsersServices = {
   createAdminIntoDB,
   createDoctorIntoDB,
+  createPatientIntoDB,
 };

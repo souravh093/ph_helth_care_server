@@ -30,3 +30,16 @@ export type TDoctorUser = {
   password: string;
   doctor: TDoctor;
 };
+
+type TPatient = {
+  name: string;
+  email: string;
+  contactNumber: string;
+  address?: string;
+  isDeleted?: boolean;
+}
+
+export type TPatientUser = {
+  password: string;
+  patient: TPatient;
+};
