@@ -1,8 +1,14 @@
-import { UserRole } from "@prisma/client";
+import { Prisma, UserRole, UserStatus } from "@prisma/client";
 import prisma from "../../../db/db.config";
 import bcrypt from "bcryptjs";
-import { TAdminUser, TDoctorUser, TPatientUser } from "../../types/admin.inteface";
-
+import {
+  TAdminUser,
+  TDoctorUser,
+  TPatientUser,
+} from "../../types/admin.inteface";
+import { TAdminOptionsRequest } from "../../interfaces/pagination";
+import { calculatePagination } from "../../utils/paginationHelper";
+import { userSearchableFields } from "./user.constant";
 
 const createAdminIntoDB = async (payload: TAdminUser) => {
   const hashPassword: string = await bcrypt.hash(payload.password, 10);
@@ -85,8 +91,96 @@ const createPatientIntoDB = async (payload: TPatientUser) => {
   return result;
 };
 
+const getAllFromDB = async (query: any, options: TAdminOptionsRequest) => {
+  const { searchTerm, ...filterData } = query as { [key: string]: any };
+  const { limit, page, skip, sortBy, sortOrder } = calculatePagination(options);
+  // learn query handler
+  const andConditions: Prisma.UserWhereInput[] = [];
+
+  if (query.searchTerm) {
+    andConditions.push({
+      OR: userSearchableFields.map((field) => ({
+        [field]: {
+          contains: query.searchTerm,
+          mode: "insensitive",
+        },
+      })),
+    });
+  }
+
+  if (Object.keys(filterData).length > 0) {
+    andConditions.push({
+      AND: Object.keys(filterData).map((key) => ({
+        [key]: {
+          equals: filterData[key],
+        },
+      })),
+    });
+  }
+
+  const whereClause: Prisma.UserWhereInput =
+    andConditions.length > 0 ? { AND: andConditions } : {};
+  const result = await prisma.user.findMany({
+    where: whereClause,
+    skip,
+    take: limit,
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      status: true,
+      needPasswordChange: true,
+      createdAt: true,
+      updatedAt: true,
+      admin: true,
+      patient: true,
+      doctor: true,
+    },
+    orderBy:
+      options.sortBy && options.sortOrder
+        ? {
+            [options.sortBy]: options.sortOrder,
+          }
+        : {
+            createdAt: "desc",
+          },
+  });
+
+  const total = await prisma.user.count({ where: whereClause });
+
+  return {
+    data: result,
+    meta: {
+      page,
+      limit,
+      total,
+    },
+  };
+};
+
+const changeStatus = async (id: string, payload: {status: UserStatus}) => {
+  await prisma.user.findUniqueOrThrow({
+    where: {
+      id,
+    }
+  })
+
+  const result = await prisma.user.update({
+    where: {
+      id,
+    },
+    data: {
+      status: payload.status,
+    }
+  })
+
+  return result;
+}
+
 export const UsersServices = {
   createAdminIntoDB,
   createDoctorIntoDB,
   createPatientIntoDB,
+  getAllFromDB,
+  changeStatus,
 };

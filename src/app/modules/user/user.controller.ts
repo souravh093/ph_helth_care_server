@@ -1,7 +1,10 @@
+import { pick } from "../../../shared/pick";
 import { TCloudinaryResponse } from "../../types/file";
 import catchAsync from "../../utils/catchAsync";
 import { uploadCloudinary } from "../../utils/fileUploder";
 import sendResponse from "../../utils/sendResponse";
+import { optionsFilter } from "../admin/admin.constant";
+import { userFilterableFields } from "./user.constant";
 import { UsersServices } from "./user.service";
 
 const createAdmin = catchAsync(async (req, res) => {
@@ -44,7 +47,6 @@ const createDoctor = catchAsync(async (req, res) => {
   });
 });
 
-
 const createPatient = catchAsync(async (req, res) => {
   let userData = JSON.parse(req.body.data);
 
@@ -65,8 +67,36 @@ const createPatient = catchAsync(async (req, res) => {
   });
 });
 
+const getAllUsers = catchAsync(async (req, res) => {
+  const finalObj = pick(req.query, userFilterableFields);
+  const options = pick(req.query, optionsFilter);
+
+  const { data, meta } = await UsersServices.getAllFromDB(finalObj, options);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Users data fetched",
+    meta,
+    data,
+  });
+});
+
+const changeProfileStatus = catchAsync(async (req, res) => {
+  const result = await UsersServices.changeStatus(req.params.id, req.body);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Users Profile update data fetched",
+    data: result,
+  });
+});
+
 export const UserController = {
   createAdmin,
   createDoctor,
   createPatient,
+  getAllUsers,
+  changeProfileStatus,
 };
