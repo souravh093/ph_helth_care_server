@@ -8,6 +8,11 @@ import { UserValidation } from "./user.validation";
 const router = Router();
 
 router.get("/", auth("ADMIN", "SUPER_ADMIN"), UserController.getAllUsers);
+router.get(
+  "/me",
+  auth("ADMIN", "DOCTOR", "SUPER_ADMIN", "USER"),
+  UserController.getMyProfile
+);
 
 router.post(
   "/create-admin",
@@ -34,4 +39,12 @@ router.patch(
   auth("SUPER_ADMIN", "ADMIN"),
   UserController.changeProfileStatus
 );
+
+router.put(
+  "/me",
+  auth("SUPER_ADMIN", "ADMIN", "DOCTOR", "PATIENT"),
+  upload.single("file"),
+  UserController.updateMyProfile
+);
+
 export const UserRoutes = router;

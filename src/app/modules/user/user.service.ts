@@ -1,4 +1,4 @@
-import { Prisma, UserRole, UserStatus } from "@prisma/client";
+import { Admin, Doctor, Patient, Prisma, UserRole, UserStatus } from "@prisma/client";
 import prisma from "../../../db/db.config";
 import bcrypt from "bcryptjs";
 import {
@@ -9,6 +9,7 @@ import {
 import { TAdminOptionsRequest } from "../../interfaces/pagination";
 import { calculatePagination } from "../../utils/paginationHelper";
 import { userSearchableFields } from "./user.constant";
+import { JwtPayload } from "jsonwebtoken";
 
 const createAdminIntoDB = async (payload: TAdminUser) => {
   const hashPassword: string = await bcrypt.hash(payload.password, 10);
@@ -158,12 +159,12 @@ const getAllFromDB = async (query: any, options: TAdminOptionsRequest) => {
   };
 };
 
-const changeStatus = async (id: string, payload: {status: UserStatus}) => {
+const changeStatus = async (id: string, payload: { status: UserStatus }) => {
   await prisma.user.findUniqueOrThrow({
     where: {
       id,
-    }
-  })
+    },
+  });
 
   const result = await prisma.user.update({
     where: {
@@ -171,8 +172,51 @@ const changeStatus = async (id: string, payload: {status: UserStatus}) => {
     },
     data: {
       status: payload.status,
-    }
-  })
+    },
+  });
+
+  return result;
+};
+
+const getMyProfile = async (id: string) => {
+  const result = await prisma.user.findUniqueOrThrow({
+    where: {
+      id,
+      status: UserStatus.ACTIVE,
+    },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      status: true,
+      needPasswordChange: true,
+      createdAt: true,
+      updatedAt: true,
+      admin: true,
+      doctor: true,
+      patient: true,
+    },
+  });
+
+  return result;
+};
+
+const updateMyProfile = async (user: JwtPayload, payload: Admin | Doctor | Patient) => {
+  const result = await prisma.user.update({
+    where: {
+      id: user.id,
+    },
+    data: {
+      [user.role.toLowerCase()]: {
+        update: payload,
+      },
+    },
+    include: {
+      admin: true,
+      doctor: true,
+      patient: true,
+    },
+  });
 
   return result;
 }
@@ -183,4 +227,6 @@ export const UsersServices = {
   createPatientIntoDB,
   getAllFromDB,
   changeStatus,
+  getMyProfile,
+  updateMyProfile,
 };

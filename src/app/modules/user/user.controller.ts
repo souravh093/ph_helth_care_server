@@ -93,10 +93,43 @@ const changeProfileStatus = catchAsync(async (req, res) => {
   });
 });
 
+const getMyProfile = catchAsync(async (req, res) => {
+  const result = await UsersServices.getMyProfile(req.user.id);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Users Profile fetched data fetched",
+    data: result,
+  });
+});
+
+const updateMyProfile = catchAsync(async (req, res) => {
+  let userData = JSON.parse(req.body.data);
+
+  if (req.file) {
+    const uploadFile = (await uploadCloudinary(
+      req.file
+    )) as TCloudinaryResponse;
+    userData.profilePhoto = uploadFile.secure_url;
+  }
+
+  const result = await UsersServices.updateMyProfile(req.user, userData);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Update Profile successfully",
+    data: result,
+  });
+});
+
 export const UserController = {
   createAdmin,
   createDoctor,
   createPatient,
   getAllUsers,
   changeProfileStatus,
+  getMyProfile,
+  updateMyProfile,
 };

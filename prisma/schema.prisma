@@ -57,23 +57,24 @@ model Admin {
 }
 
 model Doctor {
-  id                  String   @id @default(uuid())
+  id                  String              @id @default(uuid())
   name                String
-  email               String   @unique
-  user                User     @relation(fields: [email], references: [email])
-  profilePhoto        String?  @db.Text
+  email               String              @unique
+  user                User                @relation(fields: [email], references: [email])
+  profilePhoto        String?             @db.Text
   contactNumber       String
   address             String?
   registrationNumber  String
-  experience          Int      @default(0)
+  experience          Int                 @default(0)
   gender              Gender
   appointmentFee      Int
   qualification       String
   currentWorkingPlace String
   designation         String
-  isDeleted           Boolean  @default(false)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  isDeleted           Boolean             @default(false)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  doctorSpecialites   DoctorSpecialties[]
 
   @@map("doctors")
 }
@@ -89,4 +90,27 @@ model Patient {
   isDeleted     Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+model Specialties {
+  id                String              @id @default(uuid())
+  title             String
+  icon              String
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  doctorSpecialites DoctorSpecialties[]
+
+  @@map("specialties")
+}
+
+model DoctorSpecialties {
+  doctorId    String
+  doctor      Doctor      @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  specialityId  String
+  specialties Specialties @relation(fields: [specialityId], references: [id], onDelete: Cascade)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@id([doctorId, specialityId])
+  @@map("doctor_specialties")
 }
